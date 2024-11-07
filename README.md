@@ -13,3 +13,8 @@ initial condition : uniformly 0
 
 ## Result
 ![pic_cav](https://github.com/user-attachments/assets/faa449e5-b969-4bfe-a59c-cca419a4d3b0)
+
+### Comment
+In this program, 1st order Euler explicit method is employed about time to make it easier to code. <br>
+Therefore, the program can analyze only flows with very low Reynolds numbers. If U is set a little higher or the number of grids is increased, the calculation diverges. <br> 
+So, the program will be modified to Euler implicit solution. Also, it will be added code of particle tracking to make the flow field more easily visualized .
