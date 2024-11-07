@@ -12,7 +12,7 @@ boundary condition : u = v = 0 at east, west, south wall. u = U, v = 0 at south 
 initial condition : uniformly 0
 
 ## Result
-![pic_cav](https://github.com/user-attachments/assets/faa449e5-b969-4bfe-a59c-cca419a4d3b0)
+![cavity](https://github.com/user-attachments/assets/0bbca827-3d93-4880-bc35-d0555a9d3053)
 
 ### Comment
 In this program, 1st order Euler explicit method is employed about time to make it easier to code. <br>
