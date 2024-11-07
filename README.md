@@ -8,8 +8,8 @@ so it is well known as a benchmark problem in fluid analysis.
 ## Govering Equation
 ![bbb](https://github.com/user-attachments/assets/827f069f-1aa8-45b1-be93-62e2700f3ffd)
 
-boundary condition : u = v = 0 at east, west, south wall. <br>
-                      u = U, v = 0 at south wall
+boundary condition : u = v = 0 at east, west, south wall. u = U, v = 0 at south wall. <br>
 initial condition : uniformly 0
 
 ## Result
+![pic_cav](https://github.com/user-attachments/assets/faa449e5-b969-4bfe-a59c-cca419a4d3b0)
