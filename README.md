@@ -21,4 +21,4 @@ So, the flow is very slow, and the flow field reaches a steady state.
 ### Comment
 In this program, 1st order Euler explicit method is employed about time to make it easier to code. <br>
 Therefore, the program can analyze only flows with very low Reynolds numbers. If U is set a little higher or the number of grids is increased, the calculation diverges. <br> 
-So, the program will be modified to Euler implicit solution. Also, it will be added code of particle tracking to make the flow field more easily visualized .
+So, the program will be modified to Euler implicit method. Also, it will be added code of particle tracking to make the flow field more easily visualized .
