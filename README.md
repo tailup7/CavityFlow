@@ -8,7 +8,7 @@ so it is well known as a benchmark problem in fluid analysis.
 ## Governing Equation
 ![bbb](https://github.com/user-attachments/assets/827f069f-1aa8-45b1-be93-62e2700f3ffd)
 <br>
-boundary condition : u = v = 0 at east, west, south wall. u = U, v = 0 at south wall. <br>
+boundary condition : u = v = 0 at east, west, south wall. u = U, v = 0 at north wall. <br>
 initial condition : uniformly 0
 
 ## Result
