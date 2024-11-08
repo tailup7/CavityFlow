@@ -18,7 +18,11 @@ initial condition : uniformly 0
 In this calculation, U (which is the velocity of upper side) is set 1, and Re = 1.<br>
 So, the flow is very slow, and the flow field reaches a steady state.
 
-### Comment
+
+### Particle Tracking
+Particles were scattered randamly over the flow field after flow field reached steady state to make the flow easier to see.
+
+#### Comment
 In this program, 1st order Euler explicit method is employed about time to make it easier to code. <br>
 Therefore, the program can analyze only flows with very low Reynolds numbers. If U is set a little higher or the number of grids is increased, the calculation diverges. <br> 
-So, the program will be modified to Euler implicit method. Also, it will be added code of particle tracking to make the flow field more easily visualized .
+So, the program will be modified to Euler implicit method. 
