@@ -15,7 +15,6 @@ initial condition : uniformly 0
 ![cavity](https://github.com/user-attachments/assets/0bbca827-3d93-4880-bc35-d0555a9d3053)
 <br>
 <br>
-<br>
 In this calculation, U (which is the velocity of upper side) is set 1, and Re = 1.<br>
 So, the flow is very slow, and the flow field reaches a steady state.
 
