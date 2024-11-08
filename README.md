@@ -7,12 +7,14 @@ so it is well known as a benchmark problem in fluid analysis.
 
 ## Governing Equation
 ![bbb](https://github.com/user-attachments/assets/827f069f-1aa8-45b1-be93-62e2700f3ffd)
-
+<br>
 boundary condition : u = v = 0 at east, west, south wall. u = U, v = 0 at south wall. <br>
 initial condition : uniformly 0
 
 ## Result
 ![cavity](https://github.com/user-attachments/assets/0bbca827-3d93-4880-bc35-d0555a9d3053)
+<br>
+<br>
 <br>
 In this calculation, U (which is the velocity of upper side) is set 1, and Re = 1.<br>
 So, the flow is very slow, and the flow field reaches a steady state.
