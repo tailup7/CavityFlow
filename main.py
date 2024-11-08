@@ -1,5 +1,16 @@
+######################################################################
+# cavity flow with finite difference method
+#
+# space : 2nd order central
+#
+# time : 1st order Euler
+#
+# grid : staggaered
+######################################################################
+
 import os
 import time
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 import vtk
@@ -8,14 +19,15 @@ from vtk.util import numpy_support
 output_dir = "output_cavity"
 os.makedirs(output_dir, exist_ok=True)
 
+#####################  input parameter  ###############################
 Lx = 1 
 Ly = 1 
-U = 1       # velocity of ceiling wall
-Re = 1      #  Reynolds number 
-Nx = 32     # grid counts in x axis
-Ny = 32     #                y
-t_end = 1.0 # total time
-dt = 0.0001 #delta t
+U = 1        # velocity of ceiling wall
+Re = 1       #  Reynolds number 
+Nx = 64      # grid counts in x axis
+Ny = 64      #                y
+t_end = 1.0  # total time
+dt = 0.00001 #delta t
 eps_c = 0.00000001  # Threshold
 
 Ncells = Nx * Ny 
@@ -23,10 +35,13 @@ dx = Lx/Nx
 dy = Ly/Ny
 nu = U*Lx/Re 
 
+######################  output  ###########################################################
 def write_vti_file(filename, u_visu, v_visu, p_visu, KE_visu, Nx, Ny):
 
     imageData = vtk.vtkImageData()
     imageData.SetDimensions(Nx, Ny, 1)  
+    imageData.SetSpacing(dx, dy, 1.0)
+    imageData.SetOrigin(0.0, 0.0, 0.0)
 
     u_vtk = numpy_support.numpy_to_vtk(u_visu.ravel(), deep=True, array_type=vtk.VTK_DOUBLE)
     v_vtk = numpy_support.numpy_to_vtk(v_visu.ravel(), deep=True, array_type=vtk.VTK_DOUBLE)
@@ -49,6 +64,7 @@ def write_vti_file(filename, u_visu, v_visu, p_visu, KE_visu, Nx, Ny):
     writer.SetInputData(imageData)
     writer.Write()
 
+########################  declare vector and matrix (Be careful to size!)  ################################
 u = np.zeros((Nx+1,Ny))
 up = np.zeros((Nx+1,Ny))   # u prediction  (SMAC method)
 uold =np.zeros((Nx+1,Ny))   # for convergence check  
@@ -71,7 +87,7 @@ vxx=np.zeros((Nx,Ny-1))
 vyy=np.zeros((Nx,Ny-1))
 KE=np.zeros((Nx,Ny))
 
-#prepare M
+# prepare M
 for i in range (Nx):
     for j in range (Ny):
         PP = i + j * Nx
@@ -92,9 +108,11 @@ for i in range (Nx):
             M[PP][NN] = 1 / (dy * dy)
             M[PP][PP] -= 1 / (dy * dy)
 
+#######################  calculation ##########################
 t = dt
 # main loop
 while t <= t_end:
+    ## for convergence check 
     for i in range (Nx+1):
         for j in range (Ny):
             uold[i][j] = u[i][j]
@@ -304,3 +322,236 @@ while t <= t_end:
             break
 
     t += dt
+
+################################################################################
+####################### particle tracking ######################################
+################################################################################
+
+num_of_particle = 1000
+
+u_p_northeast=np.zeros(num_of_particle)
+u_p_northwest=np.zeros(num_of_particle)
+u_p_southeast=np.zeros(num_of_particle)
+u_p_southwest=np.zeros(num_of_particle)
+v_p_northeast=np.zeros(num_of_particle)
+v_p_northwest=np.zeros(num_of_particle)
+v_p_southeast=np.zeros(num_of_particle)
+v_p_southwest=np.zeros(num_of_particle)
+velocity_x=np.zeros(num_of_particle)
+velocity_y=np.zeros(num_of_particle)
+first_step_x=np.zeros(num_of_particle)
+first_step_y=np.zeros(num_of_particle)
+first_velocity_x=np.zeros(num_of_particle)
+first_velocity_y=np.zeros(num_of_particle)
+
+#### output position of particle 
+def export_particle(filename, particle_x, particle_y):   
+    directory = os.path.dirname(filename) 
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    with open(filename, 'w') as f:
+        f.write("# vtk DataFile Version 3.0\n")
+        f.write("Data.vtk\n")
+        f.write("ASCII\n")
+        f.write("DATASET UNSTRUCTURED_GRID\n")
+
+        f.write(f"POINTS {len(particle_x)} float\n")
+        for x, y in zip(particle_x, particle_y):
+            f.write(f"{x} {y} 0.0\n")
+
+        f.write(f"CELL_TYPES {len(particle_x)}\n")
+        for _ in range(len(particle_x)):
+            f.write("1\n")
+
+        f.write(f"POINT_DATA {len(particle_x)}\n")
+        f.write("SCALARS radius float\n")
+        f.write("LOOKUP_TABLE default\n")
+        for _ in range(len(particle_x)):
+            f.write("0.1\n")
+
+############ bilinear interpolation
+def incell_particular_velocity(
+    *,
+    distance_bottom:float,
+    distance_left:float,
+    k:int,
+    x_p:int,
+    y_p:int,
+) -> float:
+    
+    if 0 < x_p < Nx-1:
+        if 0 < y_p < Ny-1:
+            u_p_northeast[k] = (u[x_p][y_p+1]+u[x_p][y_p])/2
+            u_p_northwest[k] = (u[x_p-1][y_p+1]+u[x_p-1][y_p])/2
+            u_p_southeast[k] = (u[x_p][y_p]+u[x_p][y_p-1])/2
+            u_p_southwest[k] = (u[x_p-1][y_p]+u[x_p-1][y_p-1])/2
+            v_p_northeast[k] = (v[x_p+1][y_p]+v[x_p][y_p])/2
+            v_p_northwest[k] = (v[x_p-1][y_p]+v[x_p][y_p])/2
+            v_p_southeast[k] = (v[x_p+1][y_p-1]+v[x_p][y_p-1])/2
+            v_p_southwest[k] = (v[x_p-1][y_p-1]+v[x_p][y_p-1])/2
+        elif y_p == 0:
+            u_p_northeast[k] = (u[x_p][y_p+1]+u[x_p][y_p])/2
+            u_p_northwest[k] = (u[x_p-1][y_p+1]+u[x_p-1][y_p])/2
+            u_p_southeast[k] = (u[x_p][y_p])/2
+            u_p_southwest[k] = (u[x_p-1][y_p])/2
+            v_p_northeast[k] = (v[x_p+1][y_p]+v[x_p][y_p])/2
+            v_p_northwest[k] = (v[x_p-1][y_p]+v[x_p][y_p])/2
+            v_p_southeast[k] = 0
+            v_p_southwest[k] = 0
+        elif y_p == Ny-1:
+            u_p_northeast[k] = (U+u[x_p][y_p])/2
+            u_p_northwest[k] = (U+u[x_p-1][y_p])/2
+            u_p_southeast[k] = (u[x_p][y_p]+u[x_p][y_p-1])/2
+            u_p_southwest[k] = (u[x_p-1][y_p]+u[x_p-1][y_p-1])/2
+            v_p_northeast[k] = 0
+            v_p_northwest[k] = 0
+            v_p_southeast[k] = (v[x_p+1][y_p-1]+v[x_p][y_p-1])/2
+            v_p_southwest[k] = (v[x_p-1][y_p-1]+v[x_p][y_p-1])/2
+    elif x_p == 0:
+        if 0 < y_p < Ny-1:
+            u_p_northeast[k] = (u[x_p][y_p+1]+u[x_p][y_p])/2
+            u_p_northwest[k] = 0
+            u_p_southeast[k] = (u[x_p][y_p]+u[x_p][y_p-1])/2
+            u_p_southwest[k] = 0
+            v_p_northeast[k] = (v[x_p+1][y_p]+v[x_p][y_p])/2
+            v_p_northwest[k] = (v[x_p][y_p])/2
+            v_p_southeast[k] = (v[x_p+1][y_p-1]+v[x_p][y_p-1])/2
+            v_p_southwest[k] = (v[x_p][y_p-1])/2                    
+        elif y_p == 0:
+            u_p_northeast[k] = (u[x_p][y_p+1]+u[x_p][y_p])/2
+            u_p_northwest[k] = 0
+            u_p_southeast[k] = (u[x_p][y_p])/2
+            u_p_southwest[k] = 0
+            v_p_northeast[k] = (v[x_p+1][y_p]+v[x_p][y_p])/2
+            v_p_northwest[k] = (v[x_p][y_p])/2
+            v_p_southeast[k] = 0
+            v_p_southwest[k]= 0
+        elif y_p == Ny-1:
+            u_p_northeast[k] = (U+u[x_p][y_p])/2
+            u_p_northwest[k] = (U)/2
+            u_p_southeast[k] = (u[x_p][y_p]+u[x_p][y_p-1])/2
+            u_p_southwest[k] = 0
+            v_p_northeast[k] = 0
+            v_p_northwest[k] = 0
+            v_p_southeast[k] = (v[x_p+1][y_p-1]+v[x_p][y_p-1])/2
+            v_p_southwest[k] = (v[x_p-1][y_p-1]+v[x_p][y_p-1])/2
+    elif x_p == Nx-1 :
+        if 0 < y_p < Ny-1:
+            u_p_northeast[k] = 0
+            u_p_northwest[k] = (u[x_p-1][y_p+1]+u[x_p-1][y_p])/2
+            u_p_southeast[k] = 0
+            u_p_southwest[k] = (u[x_p-1][y_p]+u[x_p-1][y_p-1])/2
+            v_p_northeast[k] = (v[x_p][y_p])/2
+            v_p_northwest[k] = (v[x_p-1][y_p]+v[x_p][y_p])/2
+            v_p_southeast[k] = (v[x_p][y_p-1])/2
+            v_p_southwest[k] = (v[x_p-1][y_p-1]+v[x_p][y_p-1])/2
+        elif y_p == 0:
+            u_p_northeast[k] = 0
+            u_p_northwest[k] = (u[x_p-1][y_p+1]+u[x_p-1][y_p])/2
+            u_p_southeast[k] = 0
+            u_p_southwest[k] = (u[x_p-1][y_p])/2
+            v_p_northeast[k] = (v[x_p][y_p])/2
+            v_p_northwest[k] = (v[x_p-1][y_p]+v[x_p][y_p])/2
+            v_p_southeast[k] = 0
+            v_p_southwest[k] = 0
+        elif y_p == Ny-1:
+            u_p_northeast[k] = (U)/2
+            u_p_northwest[k] = (U+u[x_p-1][y_p])/2
+            u_p_southeast[k] = 0
+            u_p_southwest[k] = (u[x_p-1][y_p]+u[x_p-1][y_p-1])/2
+            v_p_northeast[k] = 0
+            v_p_northwest[k] = 0
+            v_p_southeast[k] = (v[x_p][y_p-1])/2
+            v_p_southwest[k] = (v[x_p-1][y_p-1]+v[x_p][y_p-1])/2
+            
+    velocity_x[k] = (distance_left /dx) * (distance_bottom/dy) * u_p_northeast[k] + \
+        ((dx-distance_left)/dx) * (distance_bottom/dy) * u_p_northwest[k] + \
+        (distance_left/dx)*((dy-distance_bottom)/dy) * u_p_southeast[k] + \
+        ((dx-distance_left)/dx)*((dy-distance_bottom)/dy) * u_p_southwest[k]      
+    velocity_y[k] = (distance_left/dx) * (distance_bottom/dy) * v_p_northeast[k] + \
+        ((dx-distance_left)/dx) * (distance_bottom/dy) * v_p_northwest[k] + \
+        (distance_left/dx)*((dy-distance_bottom)/dy) * v_p_southeast[k] + \
+        ((dx-distance_left)/dx)*((dy-distance_bottom)/dy) * v_p_southwest[k]
+    return velocity_x[k], velocity_y[k]
+
+#### calculate particle position 
+def particle_tracking(time_step, num_of_particle, Nx, Ny, dx, dy, dt, u, v):   
+    particle_x = [random.uniform(0, Lx-dx) for _ in range(num_of_particle)]
+    particle_y = [random.uniform(0, Ly-dy) for _ in range(num_of_particle)]  #scatter particles randomly 
+
+    for t in range(time_step - 1):
+        for k in range(num_of_particle):
+            # Converts particle positions to lattice numbers
+            x_p = int(particle_x[k] / dx)   
+            y_p = int(particle_y[k] / dy)    
+                                            
+            #######  distance from bottom left of cell
+            distance_bottom = particle_y[k]             
+            if distance_bottom > dy:
+                while distance_bottom > dy:
+                    distance_bottom -= dy    
+
+            distance_left = particle_x[k]
+            if distance_left > dx:
+                while distance_left > dx:
+                    distance_left -= dx   
+
+            # bilinear interpolation
+            velocity_x[k],velocity_y[k] = incell_particular_velocity(
+                distance_bottom=distance_bottom,
+                distance_left=distance_left,
+                k=k,
+                x_p=x_p,
+                y_p=y_p,
+            )
+
+            # Runge-Kutta method  
+            first_step_x[k] = particle_x[k] + 0.5 * dt * velocity_x[k]
+            first_step_y[k] = particle_y[k] + 0.5 * dt * velocity_y[k]
+
+            x_p = int(first_step_x[k] / dx)
+            y_p = int(first_step_y[k] / dy)
+
+            distance_bottom = first_step_y[k]            
+            if distance_bottom > dy:
+                while distance_bottom > dy:
+                    distance_bottom -= dy    
+
+            distance_left = first_step_x[k]
+            if distance_left > dx:
+                while distance_left > dx:
+                    distance_left -= dx  
+
+            first_velocity_x[k],first_velocity_y[k] = incell_particular_velocity(
+                distance_bottom=distance_bottom,
+                distance_left=distance_left,
+                k=k,
+                x_p=x_p,
+                y_p=y_p,
+            )
+
+            # update position of particle
+            particle_x[k] = particle_x[k] + (1.0 / 6.0) * dt * velocity_x[k] + (1.0 / 3.0) * dt * first_velocity_x[k]
+            particle_y[k] = particle_y[k] + (1.0 / 6.0) * dt * velocity_y[k] + (1.0 / 3.0) * dt * first_velocity_y[k]
+
+            # boundary condition ( Something Wrong ! )
+            #if particle_x[k] < 0:
+            #    particle_x[k] = 0           
+            #if particle_y[k] < Ly:
+            #    particle_y[k] = Ly
+            #if particle_x[k] > Lx:
+            #    particle_x[k] = Lx
+
+        # Outputs a file every 10 steps
+        if t % 10 == 0:
+            filename = f"output_particle/particle{t // 10}.vtk"
+            export_particle(filename, particle_x, particle_y)
+            print(f"Exported {filename}")
+
+if __name__ == "__main__":
+    
+    dt = 0.001
+    time_step = 2000
+
+    particle_tracking(time_step, num_of_particle, Nx, Ny, dx, dy, dt, u, v)
