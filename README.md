@@ -20,7 +20,9 @@ So, the flow is very slow, and the flow field reaches a steady state.
 
 
 ### Particle Tracking
+![ani](https://github.com/user-attachments/assets/5c09915e-432e-43db-9a99-b1fe968eb33b)
 Particles were scattered randamly over the flow field after flow field reached steady state to make the flow easier to see.
+
 
 #### Comment
 In this program, 1st order Euler explicit method is employed about time to make it easier to code. <br>
