@@ -1,11 +1,14 @@
 ######################################################################
-# cavity flow with finite difference method
+# 2D cavity flow with finite difference method
+#
+# coupling : SMAC method
 #
 # space : 2nd order central
 #
 # time : 1st order Euler
 #
 # grid : staggaered
+#
 ######################################################################
 
 import os
