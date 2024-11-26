@@ -21,7 +21,8 @@ So, the flow is very slow, and the flow field reaches a steady state.
 
 ### Particle Tracking
 ![ani](https://github.com/user-attachments/assets/5c09915e-432e-43db-9a99-b1fe968eb33b)
-Particles were scattered randamly over the flow field after flow field reached steady state to make the flow easier to see.
+Particles were scattered randamly over the flow field after flow field reached steady state to make the flow easier to see . <br>
+These particles have no mass and do not affect the flow field
 
 
 #### Comment
