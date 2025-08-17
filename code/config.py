@@ -1,0 +1,12 @@
+LX    = 1         # region length
+LY    = 1
+NX    = 96        # num of grids
+NY    = 96
+DT    = 0.0001    # time step
+T_END = 1.0
+U     = 50       # velocity of moving wall
+NU    = 1         # kinematic viscosity
+DX    = LX / (NX-1)
+DY    = LY / (NY-1)
+NUM_OF_PARTICLE = 1000
+EPS_C = 0.00000001  # Threshold

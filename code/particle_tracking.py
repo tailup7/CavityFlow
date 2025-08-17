@@ -32,8 +32,8 @@ class Particle:
         self.id = id
         self.x = x
         self.y = y
-        self.x_int  = int( x / DX )
-        self.y_int  = int( x / DY )
+        self.x_int  = int( x / DX )    # particleが所属するcellの, 左下の格子点のi番号, j番号
+        self.y_int  = int( y / DY )    # 0 ~ NX-2 の NX-1 個の数になりうる
         # normalize at the cell
         while int (x / DX) > 0 :
             x -= DX
@@ -64,31 +64,37 @@ def scatter_particles():
         particles.append(particle)
     return particles
 
-def rk4_method(particle, u, v):
-    particle.calc_velocity_at_the_cell(u,v)
+def boundary_condition(particle):
+    if particle.x < 0:
+        particle.x = 0       
+    if particle.x >= LX:
+        particle.x = LX - 0.00001*DX
+    if particle.y < 0:
+        particle.y = 0    
+    if particle.y >= LY:
+        particle.y = LY - 0.00001*DY
+    particle_new = Particle(particle.id, particle.x, particle.y)
+    return particle_new
+
+def rk4_method(particle, data):
+    particle.calc_velocity_at_the_cell(data.u, data.v)
 
     particle_tmp1 = Particle(particle.id, particle.x + DT*particle.u/2, particle.y + DT*particle.v/2)
-    particle_tmp1.calc_velocity_at_the_cell(u, v)
+    particle_tmp1 = boundary_condition(particle_tmp1)
+    particle_tmp1.calc_velocity_at_the_cell(data.u, data.v)
 
     particle_tmp2 = Particle(particle.id, particle.x + DT*particle_tmp1.u/2, particle.y + DT*particle_tmp1.v/2)
-    particle_tmp2.calc_velocity_at_the_cell(u, v)
+    particle_tmp2 = boundary_condition(particle_tmp2)
+    particle_tmp2.calc_velocity_at_the_cell(data.u, data.v)
 
     particle_tmp3 = Particle(particle.id, particle.x + DT*particle_tmp2.u, particle.y + DT*particle_tmp2.v)
-    particle_tmp3.calc_velocity_at_the_cell(u, v)
+    particle_tmp3 = boundary_condition(particle_tmp3)
+    particle_tmp3.calc_velocity_at_the_cell(data.u, data.v)
 
     x_new = particle.x + DT*particle.u / 6 + DT * particle_tmp1.u/3 + DT*particle_tmp2.u / 3 + DT*particle_tmp3.u/6
     y_new = particle.y + DT*particle.v / 6 + DT * particle_tmp1.v/3 + DT*particle_tmp2.v / 3 + DT*particle_tmp3.v/6 
 
-    # boundary condition
-    if x_new < 0:
-        x_new = 0       
-    if x_new > LX:
-        x_new = LX
-    if y_new < 0:
-        y_new = 0    
-    if y_new > LY:
-        y_new = LY
-
     particle_new = Particle(particle.id, x_new, y_new)
+    particle_new = boundary_condition(particle_new)
 
     return particle_new
