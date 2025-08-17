@@ -15,17 +15,11 @@ initial condition : uniformly 0
 ![cavity](https://github.com/user-attachments/assets/0bbca827-3d93-4880-bc35-d0555a9d3053)
 <br>
 <br>
-In this calculation, U (which is the velocity of upper side) is set 1, and Re = 1.<br>
-So, the flow is very slow, and the flow field reaches a steady state.
+In this calculation, U (which is the velocity of upper side, as a reference velocity) is 50, and Re = 50.<br>
+So, the flow is slow, and the flow field reaches a steady state.
 
 
 ### Particle Tracking
 ![ani](https://github.com/user-attachments/assets/5c09915e-432e-43db-9a99-b1fe968eb33b)
-Particles were scattered randamly over the flow field after flow field reached steady state to make the flow easier to see. <br>
+Particles were scattered randamly to make the flow easier to see (ex, recirculation region). <br>
 These particles have no mass and do not affect the flow field.
-
-
-#### Comment
-In this program, 1st order Euler explicit method is employed about time to make it easier to code. <br>
-Therefore, the program can analyze only flows with very low Reynolds numbers. If U is set a little higher or the number of grids is increased, the calculation diverges. <br> 
-So, the program will be modified to Euler implicit method. 
